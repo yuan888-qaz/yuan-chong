@@ -62,6 +62,7 @@ yuan-chong/
 │   ├── client/      # 用户端页面
 │   └── admin/       # 后台页面
 ├── data/            # SQLite 数据库文件（运行后生成，已 gitignore）
+├── deploy/          # VPS 部署：install.sh 一键脚本、systemd 服务、Nginx 示例
 ├── .env.example     # 环境变量模板
 ├── Procfile         # Heroku/Railway 启动声明
 ├── render.yaml      # Render Blueprint 配置
@@ -97,22 +98,28 @@ yuan-chong/
 3. Railway 自动用 NIXPACKS 构建并执行 `node server/index.js`。
 4. 在 Settings 生成公网域名，访问同上。
 
-### 方式三：自己的 VPS（最稳，数据持久）
+### 方式三：自己的 VPS / 云服务器（最稳，数据持久，无需绑卡）
+
+适合阿里云/腾讯云轻量服务器、任何 Debian/Ubuntu 云主机。`deploy/` 目录已带一键脚本和 systemd 配置。
+
 ```bash
-# 1. 装 Node 18+，把代码传到服务器
-# 2. 安装依赖
-npm install
+# 1. 把代码放到 /opt/yuan-chong（git clone 或上传均可）
+sudo git clone https://github.com/yuan888-qaz/yuan-chong.git /opt/yuan-chong
 
-# 3. 配置环境变量（至少 JWT_SECRET）
-cp .env.example .env
-# 编辑 .env 填入随机密钥，例如 openssl rand -hex 32
-
-# 4. 启动（建议用 pm2 守护）
-npm install -g pm2
-pm2 start server/index.js --name yuanchong
-pm2 save
+# 2. 一键安装：装 Node 20、npm install、生成随机 JWT_SECRET、注册并启动 systemd 服务
+cd /opt/yuan-chong
+sudo bash deploy/install.sh
 ```
-用 Nginx 反代 3000 端口并配 HTTPS 即可对外提供服务。
+
+脚本完成后：
+- 客户端：`http://<服务器IP>:3000/client/index.html`
+- 管理后台：`http://<服务器IP>:3000/admin/login.html`
+- 看日志：`journalctl -u yuanchong -f`
+- 重启：`sudo systemctl restart yuanchong`
+
+有域名时，用 `deploy/nginx.conf` 反代 80 端口，再用 `certbot --nginx` 申请 HTTPS。SQLite 文件落在 `data/yuanchong.db`，重启不丢。
+
+> 国内云服务器需在安全组放行 3000（或 Nginx 的 80/443）端口；用域名访问时记得备案。
 
 ### 部署前必改
 - **`JWT_SECRET`**：必须换成随机长字符串，否则 token 可被伪造。

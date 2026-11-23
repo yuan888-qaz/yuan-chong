@@ -1,0 +1,17 @@
+[Unit]
+Description=屿安代充 (yuan-chong) Node 服务
+After=network.target
+
+[Service]
+Type=simple
+# 按实际部署用户和路径修改
+WorkingDirectory=/opt/yuan-chong
+ExecStart=/usr/bin/node server/index.js
+Restart=on-failure
+RestartSec=3
+EnvironmentFile=/opt/yuan-chong/.env
+# 内存上限，按需调整
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
