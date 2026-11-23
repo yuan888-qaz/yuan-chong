@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>下单 · 屿安代充</title>
+<link rel="stylesheet" href="/client/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="/client/index.html"><span class="mark">屿</span>屿安代充</a>
+    <nav class="top-nav" id="navRight"></nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <button class="btn ghost small" onclick="history.back()">← 返回档位</button>
+      <h2>填写充值信息</h2>
+    </div>
+    <div class="form-card">
+      <div class="field">
+        <label>充值游戏 <span class="req">*</span></label>
+        <input id="fGame" readonly>
+      </div>
+      <div class="field">
+        <label>充值商品 <span class="req">*</span></label>
+        <input id="fGoods" readonly>
+      </div>
+      <div class="field">
+        <label>服务器 / 区服 <span class="req">*</span></label>
+        <input id="fServer" placeholder="例如：安卓微信 1 区 / QQ 区">
+      </div>
+      <div class="field">
+        <label>游戏角色 ID <span class="req">*</span></label>
+        <input id="fRole" placeholder="请填写准确的角色 ID，避免充错">
+      </div>
+      <div class="field">
+        <label>联系方式（选填）</label>
+        <input id="fContact" placeholder="手机号 / 微信号，方便客服联系">
+      </div>
+      <div class="summary">
+        <div class="row"><span>商品</span><b id="sumGoods"></b></div>
+        <div class="row"><span>应付金额</span><b id="sumPrice" style="font-size:20px">¥0.00</b></div>
+      </div>
+      <button class="submit" onclick="submitOrder()">提交订单</button>
+      <p class="agree">提交即代表同意《充值须知》，代充商品以游戏内实际到账为准。</p>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="ok">✓</div>
+    <h3>订单已提交</h3>
+    <p>订单号：<b id="orderNo"></b><br>客服将尽快处理，请在「我的订单」查看进度。</p>
+    <button class="btn" onclick="closeModal()">完成</button>
+  </div>
+</div>
+
+<footer><p><b>屿安代充</b> · 安全秒充 · 低价折扣</p></footer>
+<script src="/client/common.js"></script>
+<script>
+requireAuth();
+renderNav();
+const q=new URLSearchParams(location.search);
+const gid=q.get('game'), goodId=q.get('good');
+let curGame, curGood;
+
+async function load(){
+  const {games}=await api('/games');
+  curGame=games.find(x=>x.id==gid);
+  curGood=curGame.goods.find(x=>x.id==goodId);
+  document.getElementById('fGame').value=curGame.name;
+  document.getElementById('fGoods').value=curGood.name;
+  document.getElementById('sumGoods').textContent=curGood.name;
+  document.getElementById('sumPrice').textContent='¥'+curGood.price.toFixed(2);
+}
+load().catch(e=>alert(e.message));
+
+async function submitOrder(){
+  const server=document.getElementById('fServer').value.trim();
+  const role=document.getElementById('fRole').value.trim();
+  const contact=document.getElementById('fContact').value.trim();
+  if(!server) return alert('请填写服务器 / 区服');
+  if(!role) return alert('请填写游戏角色 ID');
+  try{
+    const {order}=await api('/orders',{method:'POST',body:{game_id:+gid,good_id:+goodId,server,role_id:role,contact}});
+    document.getElementById('orderNo').textContent=order.order_no;
+    document.getElementById('modal').classList.add('show');
+  }catch(e){alert(e.message)}
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('show');
+  location.href='/client/orders.html';
+}
+</script>
+</body>
+</html>

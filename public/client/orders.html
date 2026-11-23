@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的订单 · 屿安代充</title>
+<link rel="stylesheet" href="/client/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="/client/index.html"><span class="mark">屿</span>屿安代充</a>
+    <nav class="top-nav" id="navRight"></nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>我的订单</h2><span class="sub">查看充值进度</span></div>
+    <div id="list"></div>
+  </div>
+</section>
+
+<footer><p><b>屿安代充</b> · 安全秒充 · 低价折扣</p></footer>
+<script src="/client/common.js"></script>
+<script>
+requireAuth();
+renderNav();
+async function load(){
+  const {orders}=await api('/orders/mine');
+  const box=document.getElementById('list');
+  if(!orders.length){box.innerHTML='<p style="color:var(--muted)">暂无订单，去首页挑选游戏吧。</p>';return}
+  box.innerHTML=orders.map(o=>`
+    <div class="order-item">
+      <div class="o-top">
+        <span class="o-no">${o.order_no}</span>
+        <span class="status ${o.status}">${STATUS_TEXT[o.status]}</span>
+      </div>
+      <div class="o-meta">${o.game_name} · ${o.good_name}　|　区服：${o.server}　|　角色：${o.role_id}</div>
+      <div class="o-meta">下单时间：${o.created_at}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <span class="o-price">¥${o.price.toFixed(2)}</span>
+      </div>
+      ${o.note?`<div class="o-meta">客服备注：${o.note}</div>`:''}
+    </div>`).join('');
+}
+load().catch(e=>alert(e.message));
+</script>
+</body>
+</html>

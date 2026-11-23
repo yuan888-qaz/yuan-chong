@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注册 · 屿安代充</title>
+<link rel="stylesheet" href="/client/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="/client/index.html"><span class="mark">屿</span>屿安代充</a>
+    <nav class="top-nav"><a href="/client/index.html">返回首页</a></nav>
+  </div>
+</header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1>注册账号</h1>
+    <p class="sub">注册即可享受代充服务</p>
+    <div class="msg" id="msg"></div>
+    <div class="field">
+      <label>昵称</label>
+      <input id="nickname" placeholder="怎么称呼你（选填）">
+    </div>
+    <div class="field">
+      <label>账号 <span class="req">*</span></label>
+      <input id="username" placeholder="至少 3 位">
+    </div>
+    <div class="field">
+      <label>密码 <span class="req">*</span></label>
+      <input id="password" type="password" placeholder="至少 6 位">
+    </div>
+    <button class="submit" onclick="doRegister()">注 册</button>
+    <p class="auth-alt">已有账号？<a href="/client/login.html">去登录</a></p>
+  </div>
+</div>
+
+<script src="/client/common.js"></script>
+<script>
+async function doRegister(){
+  const username=document.getElementById('username').value.trim();
+  const password=document.getElementById('password').value;
+  const nickname=document.getElementById('nickname').value.trim();
+  const msg=document.getElementById('msg');
+  try{
+    const data=await api('/register',{method:'POST',body:{username,password,nickname}});
+    localStorage.setItem('yc_token',data.token);
+    localStorage.setItem('yc_user',JSON.stringify(data.user));
+    location.href='/client/index.html';
+  }catch(e){
+    msg.className='msg err';msg.textContent=e.message;
+  }
+}
+</script>
+</body>
+</html>

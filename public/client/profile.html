@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人中心 · 屿安代充</title>
+<link rel="stylesheet" href="/client/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="/client/index.html"><span class="mark">屿</span>屿安代充</a>
+    <nav class="top-nav" id="navRight"></nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>个人中心</h2></div>
+    <div class="form-card" style="max-width:560px">
+      <div class="field"><label>账号</label><input id="uName" readonly></div>
+      <div class="field"><label>昵称</label><input id="uNick" readonly></div>
+      <div class="field"><label>注册时间</label><input id="uTime" readonly></div>
+      <div class="summary">
+        <div class="row"><span>累计订单</span><b id="oCount">0</b></div>
+        <div class="row"><span>已完成</span><b id="oDone">0</b></div>
+      </div>
+      <button class="btn" onclick="location.href='/client/orders.html'">查看我的订单</button>
+    </div>
+  </div>
+</section>
+
+<footer><p><b>屿安代充</b> · 安全秒充 · 低价折扣</p></footer>
+<script src="/client/common.js"></script>
+<script>
+requireAuth();
+renderNav();
+async function load(){
+  const {user}=await api('/me');
+  document.getElementById('uName').value=user.username;
+  document.getElementById('uNick').value=user.nickname;
+  document.getElementById('uTime').value=user.created_at;
+  const {orders}=await api('/orders/mine');
+  document.getElementById('oCount').textContent=orders.length;
+  document.getElementById('oDone').textContent=orders.filter(o=>o.status==='done').length;
+}
+load().catch(e=>alert(e.message));
+</script>
+</body>
+</html>

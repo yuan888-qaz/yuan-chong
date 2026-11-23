@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理 · 屿安代充</title>
+<link rel="stylesheet" href="/admin/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">屿安<span>代充</span> · 后台</div>
+    <nav>
+      <a href="#" class="active" data-view="dashboard" onclick="switchView('dashboard',this)">📊 数据看板</a>
+      <a href="#" data-view="orders" onclick="switchView('orders',this)">📦 订单管理</a>
+      <a href="#" data-view="games" onclick="switchView('games',this)">🎮 游戏 / 商品</a>
+    </nav>
+    <div class="foot">管理员后台 © 屿安代充</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">数据看板</h1>
+      <div class="who">👤 管理员 <button class="btn small ghost" onclick="logout()">退出</button></div>
+    </div>
+
+    <!-- 看板 -->
+    <section id="view-dashboard">
+      <div class="cards">
+        <div class="stat-card"><div class="label">总订单</div><div class="num blue" id="sTotal">0</div></div>
+        <div class="stat-card"><div class="label">已完成</div><div class="num green" id="sDone">0</div></div>
+        <div class="stat-card"><div class="label">待处理</div><div class="num gold" id="sPending">0</div></div>
+        <div class="stat-card"><div class="label">已完成营业额</div><div class="num red" id="sRevenue">¥0</div></div>
+        <div class="stat-card"><div class="label">注册用户</div><div class="num" id="sUsers">0</div></div>
+      </div>
+      <div class="panel"><h2>最近订单</h2><div id="recentList"></div></div>
+    </section>
+
+    <!-- 订单管理 -->
+    <section id="view-orders" style="display:none">
+      <div class="panel">
+        <div class="filters">
+          <label>状态：</label>
+          <select id="statusFilter" onchange="loadOrders()">
+            <option value="all">全部</option>
+            <option value="pending">待处理</option>
+            <option value="processing">充值中</option>
+            <option value="done">已完成</option>
+            <option value="cancelled">已取消</option>
+          </select>
+        </div>
+        <div id="orderList"></div>
+      </div>
+    </section>
+
+    <!-- 游戏/商品 -->
+    <section id="view-games" style="display:none">
+      <div class="panel">
+        <div class="filters">
+          <button class="btn small" onclick="openGameModal()">+ 新增游戏</button>
+        </div>
+        <div id="gameList"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 订单状态弹层 -->
+<div class="modal" id="orderModal">
+  <div class="modal-box">
+    <h3>更新订单状态</h3>
+    <div class="field"><label>订单号</label><input id="mOrderNo" readonly></div>
+    <div class="field"><label>状态</label>
+      <select id="mStatus">
+        <option value="pending">待处理</option>
+        <option value="processing">充值中</option>
+        <option value="done">已完成</option>
+        <option value="cancelled">已取消</option>
+      </select>
+    </div>
+    <div class="field"><label>客服备注</label><textarea id="mNote" rows="3" placeholder="给用户看的备注（选填）"></textarea></div>
+    <div class="row-actions">
+      <button class="btn ghost" onclick="closeModal('orderModal')">取消</button>
+      <button class="btn green" onclick="saveOrder()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 游戏弹层 -->
+<div class="modal" id="gameModal">
+  <div class="modal-box">
+    <h3 id="gameModalTitle">新增游戏</h3>
+    <div class="field"><label>游戏名 *</label><input id="gName"></div>
+    <div class="field"><label>图标（emoji）</label><input id="gIcon" placeholder="🎮"></div>
+    <div class="field"><label>主题色</label><input id="gColor" placeholder="#2563eb"></div>
+    <div class="field"><label>简介</label><input id="gDesc"></div>
+    <div class="field"><label><input type="checkbox" id="gActive" checked> 上架显示</label></div>
+    <div class="row-actions">
+      <button class="btn ghost" onclick="closeModal('gameModal')">取消</button>
+      <button class="btn" onclick="saveGame()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 商品弹层 -->
+<div class="modal" id="goodModal">
+  <div class="modal-box">
+    <h3 id="goodModalTitle">新增商品</h3>
+    <div class="field"><label>所属游戏</label><input id="gdGame" readonly></div>
+    <div class="field"><label>商品名 *</label><input id="gdName"></div>
+    <div class="field"><label>描述</label><input id="gdDesc"></div>
+    <div class="field"><label>售价 ¥ *</label><input id="gdPrice" type="number" step="0.01"></div>
+    <div class="field"><label>原价 ¥</label><input id="gdOrig" type="number" step="0.01"></div>
+    <div class="field"><label>标签</label><input id="gdBadge" placeholder="热销 / 推荐（选填）"></div>
+    <div class="row-actions">
+      <button class="btn ghost" onclick="closeModal('goodModal')">取消</button>
+      <button class="btn" onclick="saveGood()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="/admin/common.js"></script>
+<script>
+adminGuard();
+let editingGameId=null, editingGoodGameId=null;
+
+function switchView(v,el){
+  document.querySelectorAll('.sidebar nav a').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+  ['dashboard','orders','games'].forEach(x=>{
+    document.getElementById('view-'+x).style.display = x===v?'block':'none';
+  });
+  document.getElementById('pageTitle').textContent=el.textContent.trim();
+  if(v==='dashboard') loadStats();
+  if(v==='orders') loadOrders();
+  if(v==='games') loadGames();
+}
+
+// ===== 看板 =====
+async function loadStats(){
+  const {stats}=await api('/admin/stats');
+  sTotal.textContent=stats.totalOrders;
+  sDone.textContent=stats.doneOrders;
+  sPending.textContent=stats.pendingOrders;
+  sRevenue.textContent='¥'+Number(stats.revenue).toFixed(2);
+  sUsers.textContent=stats.users;
+  const {orders}=await api('/admin/orders?status=all');
+  const recent=orders.slice(0,8);
+  document.getElementById('recentList').innerHTML=recent.length?tableRows(recent):'<div class="empty">暂无订单</div>';
+}
+
+// ===== 订单 =====
+async function loadOrders(){
+  const status=document.getElementById('statusFilter').value;
+  const {orders}=await api('/admin/orders?status='+status);
+  document.getElementById('orderList').innerHTML=orders.length?tableRows(orders):'<div class="empty">暂无订单</div>';
+}
+function tableRows(orders){
+  return `<table><thead><tr><th>订单号</th><th>用户</th><th>商品</th><th>区服/角色</th><th>金额</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>`+
+  orders.map(o=>`<tr>
+    <td>${o.order_no}</td>
+    <td>${o.nickname||o.username||'-'}</td>
+    <td>${o.game_name}<br><small>${o.good_name}</small></td>
+    <td>${o.server}<br><small>${o.role_id}</small></td>
+    <td>¥${o.price.toFixed(2)}</td>
+    <td><span class="status ${o.status}">${STATUS_TEXT[o.status]}</span></td>
+    <td><small>${o.created_at}</small></td>
+    <td><button class="btn small" onclick="openOrderModal(${o.id},'${o.order_no}','${o.status}','${(o.note||'').replace(/'/g,"\\'")}')">处理</button></td>
+  </tr>`).join('')+`</tbody></table>`;
+}
+let curOrderId=null;
+function openOrderModal(id,no,status,note){
+  curOrderId=id;
+  mOrderNo.value=no;mStatus.value=status;mNote.value=note;
+  document.getElementById('orderModal').classList.add('show');
+}
+async function saveOrder(){
+  try{
+    await api('/admin/orders/'+curOrderId+'/status',{method:'PATCH',body:{status:mStatus.value,note:mNote.value}});
+    closeModal('orderModal');loadOrders();loadStats();
+  }catch(e){alert(e.message)}
+}
+
+// ===== 游戏 / 商品 =====
+async function loadGames(){
+  const {games}=await api('/admin/games');
+  document.getElementById('gameList').innerHTML=games.map(g=>`
+    <div class="panel" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0">${g.icon} ${g.name} ${g.active?'':'<span class="status cancelled">已下架</span>'}</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn small ghost" onclick="openGameModal(${g.id})">编辑</button>
+          <button class="btn small" onclick="openGoodModal(${g.id})">+ 商品</button>
+        </div>
+      </div>
+      <table style="margin-top:12px"><thead><tr><th>商品</th><th>描述</th><th>售价</th><th>原价</th><th>标签</th><th>状态</th><th>操作</th></tr></thead><tbody>
+      ${g.goods.map(gd=>`<tr>
+        <td>${gd.name}</td><td><small>${gd.description}</small></td>
+        <td>¥${gd.price}</td><td>¥${gd.orig_price}</td><td>${gd.badge||'-'}</td>
+        <td><span class="status ${gd.active?'done':'cancelled'}">${gd.active?'上架':'下架'}</span></td>
+        <td><button class="btn small ghost" onclick="toggleGood(${gd.id},${gd.active})">${gd.active?'下架':'上架'}</button></td>
+      </tr>`).join('')}
+      </tbody></table>
+    </div>`).join('')||'<div class="empty">暂无游戏</div>';
+}
+function openGameModal(id){
+  editingGameId=id||null;
+  if(id){
+    api('/admin/games').then(({games})=>{
+      const g=games.find(x=>x.id===id);
+      gameModalTitle.textContent='编辑游戏';
+      gName.value=g.name;gIcon.value=g.icon;gColor.value=g.color;gDesc.value=g.description;
+      gActive.checked=!!g.active;
+    });
+  }else{
+    gameModalTitle.textContent='新增游戏';
+    gName.value='';gIcon.value='🎮';gColor.value='#2563eb';gDesc.value='';gActive.checked=true;
+  }
+  document.getElementById('gameModal').classList.add('show');
+}
+async function saveGame(){
+  const body={name:gName.value,icon:gIcon.value,color:gColor.value,description:gDesc.value,active:gActive.checked?1:0};
+  try{
+    if(editingGameId) await api('/admin/games/'+editingGameId,{method:'PATCH',body});
+    else await api('/admin/games',{method:'POST',body});
+    closeModal('gameModal');loadGames();
+  }catch(e){alert(e.message)}
+}
+function openGoodModal(gameId){
+  editingGoodGameId=gameId;
+  api('/admin/games').then(({games})=>{
+    const g=games.find(x=>x.id===gameId);
+    gdGame.value=g.icon+' '+g.name;
+  });
+  goodModalTitle.textContent='新增商品';
+  gdName.value='';gdDesc.value='';gdPrice.value='';gdOrig.value='';gdBadge.value='';
+  document.getElementById('goodModal').classList.add('show');
+}
+async function saveGood(){
+  try{
+    await api('/admin/goods',{method:'POST',body:{
+      game_id:editingGoodGameId,name:gdName.value,description:gdDesc.value,
+      price:+gdPrice.value,orig_price:+gdOrig.value||0,badge:gdBadge.value
+    }});
+    closeModal('goodModal');loadGames();
+  }catch(e){alert(e.message)}
+}
+async function toggleGood(id,active){
+  try{await api('/admin/goods/'+id,{method:'PATCH',body:{active:active?0:1}});loadGames();}
+  catch(e){alert(e.message)}
+}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+loadStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>屿安代充 · 安全秒充</title>
+<link rel="stylesheet" href="/client/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="/client/index.html"><span class="mark">屿</span>屿安代充</a>
+    <nav class="top-nav" id="navRight"></nav>
+  </div>
+</header>
+
+<div class="notice">
+  <div class="wrap"><span class="tag">公告</span><span>全平台秒充到账，下单后客服 5 分钟内接单；如遇维护延迟，请勿重复下单，联系客服处理。</span></div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <h1>安全代充 · 秒速到账</h1>
+    <p>官方渠道充值，低价折扣，支持主流手游月卡 / 钻石 / 礼包代充</p>
+    <div class="stats">
+      <div class="stat"><b>99.6%</b><span>到账成功率</span></div>
+      <div class="stat"><b>5min</b><span>平均接单时长</span></div>
+      <div class="stat"><b>24h</b><span>全天候客服</span></div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>选择游戏</h2><span class="sub">点击游戏进入充值档位</span></div>
+    <div class="games" id="gameGrid"></div>
+  </div>
+</section>
+
+<section id="notice">
+  <div class="wrap">
+    <div class="sec-head"><h2>充值须知</h2><span class="sub">下单前请仔细阅读</span></div>
+    <div class="notice-box">
+      <h3>到账与时效</h3>
+      <li>正常订单提交后 5–30 分钟内到账，高峰期或游戏维护可能延迟。</li>
+      <li>如超过 1 小时未到账，请联系客服核对，请勿重复下单。</li>
+      <h3 style="margin-top:18px">账号安全</h3>
+      <li>本平台仅代充游戏内货币 / 月卡 / 礼包，不索要账号密码，请勿向任何人提供验证码。</li>
+      <li>角色 ID 填错导致充错，平台不承担补发责任，请下单前反复核对。</li>
+      <h3 style="margin-top:18px">退款规则</h3>
+      <li>已成功到账的商品不支持退款；未接单订单可联系客服取消。</li>
+      <li>因用户提供错误信息导致的充值失败，需重新下单并承担相应费用。</li>
+    </div>
+  </div>
+</section>
+
+<footer><p><b>屿安代充</b> · 安全秒充 · 低价折扣</p></footer>
+<script src="/client/common.js"></script>
+<script>
+renderNav();
+async function loadGames(){
+  const { games } = await api('/games');
+  document.getElementById('gameGrid').innerHTML = games.map(g=>`
+    <div class="game" onclick="location.href='/client/goods.html?game=${g.id}'">
+      <div class="icon" style="background:${g.color}">${g.icon}</div>
+      <div class="name">${g.name}</div>
+      <div class="desc">${g.description}</div>
+      <span class="go">选择充值 →</span>
+    </div>`).join('');
+}
+loadGames().catch(e=>alert(e.message));
+</script>
+</body>
+</html>

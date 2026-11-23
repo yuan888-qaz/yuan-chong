@@ -1,0 +1,20 @@
+{
+  "name": "yuan-chong",
+  "version": "1.0.0",
+  "description": "屿安代充 - 用户客户端 + 管理后台 (Express + SQLite + JWT)",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "seed": "node server/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

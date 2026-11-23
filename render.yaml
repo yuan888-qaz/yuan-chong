@@ -1,0 +1,14 @@
+# Render 一键部署配置（render.yaml）
+# 仓库推到 GitHub 后，在 Render 点 New > Blueprint 导入本仓库即可
+services:
+  - type: web
+    name: yuanchong
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server/index.js
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: 22

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>充值档位 · 屿安代充</title>
+<link rel="stylesheet" href="/client/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="logo" href="/client/index.html"><span class="mark">屿</span>屿安代充</a>
+    <nav class="top-nav" id="navRight"></nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <button class="btn ghost small" onclick="location.href='/client/index.html'">← 返回首页</button>
+      <h2 id="title">充值档位</h2>
+    </div>
+    <div class="goods" id="goodsGrid"></div>
+  </div>
+</section>
+
+<footer><p><b>屿安代充</b> · 安全秒充 · 低价折扣</p></footer>
+<script src="/client/common.js"></script>
+<script>
+renderNav();
+const gid = new URLSearchParams(location.search).get('game');
+let games=[];
+async function load(){
+  const data=await api('/games');
+  games=data.games;
+  const g=games.find(x=>x.id==gid)||games[0];
+  document.getElementById('title').textContent=g.name+' · 充值档位';
+  document.getElementById('goodsGrid').innerHTML=g.goods.map(gd=>`
+    <div class="good">
+      ${gd.badge?`<span class="badge">${gd.badge}</span>`:''}
+      <div class="g-name">${gd.name}</div>
+      <div class="g-desc">${gd.description}</div>
+      <div class="price">¥${gd.price}<small>¥${gd.orig_price}</small></div>
+      <button class="buy" onclick="location.href='/client/order.html?game=${g.id}&good=${gd.id}'">立即充值</button>
+    </div>`).join('');
+}
+load().catch(e=>alert(e.message));
+</script>
+</body>
+</html>
